@@ -455,6 +455,8 @@ function resetToReady() {
   document.getElementById('instruction-text').textContent = 'Press Space to start';
   document.getElementById('cadence-type').textContent = '';
   document.getElementById('start-btn').disabled = false;
+  const overlay = document.getElementById('overlay-ready');
+  if (overlay) overlay.style.display = 'flex';
   showPhase('phase-ready');
 }
 
@@ -489,8 +491,11 @@ function startSequence() {
   if (started) return;
   started = true;
   document.getElementById('start-btn').disabled = true;
+  // Hide the overlay once play starts
+  const overlay = document.getElementById('overlay-ready');
+  if (overlay) overlay.style.display = 'none';
   earlyCheck = true; awaitingSnap = false;
-  document.getElementById('instruction-text').textContent = '...';
+  document.getElementById('instruction-text').textContent = '';
 
   // Pick weighted random variant
   const variant = pickVariant();
@@ -578,8 +583,21 @@ document.addEventListener('keydown', e => {
   if (e.code === 'KeyR') { e.preventDefault(); resetToReady(); }
 });
 
-document.getElementById('canvas-wrap').addEventListener('click', handleReact);
-document.getElementById('canvas-wrap').addEventListener('touchstart', e => { e.preventDefault(); handleReact(); });
+// Full screen tap/click — works on phone
+document.addEventListener('click', (e) => {
+  // Don't trigger if clicking buttons
+  if (e.target.closest('button') || e.target.closest('a')) return;
+  const phase = document.querySelector('.phase.active')?.id;
+  if (phase === 'phase-ready' && !started) { startSequence(); return; }
+  if (phase === 'phase-ready') handleReact();
+});
+document.addEventListener('touchstart', (e) => {
+  if (e.target.closest('button') || e.target.closest('a')) return;
+  e.preventDefault();
+  const phase = document.querySelector('.phase.active')?.id;
+  if (phase === 'phase-ready' && !started) { startSequence(); return; }
+  if (phase === 'phase-ready') handleReact();
+}, { passive: false });
 
 window.addEventListener('load', initThree);
 </script>
